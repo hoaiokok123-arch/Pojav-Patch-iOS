@@ -66,6 +66,12 @@ void init_loadCustomEnv() {
         setenv(key.UTF8String, value.UTF8String, 1);
         NSLog(@"[JavaLauncher] Added custom env variable: %@", line);
     }
+
+    NSString *lwjglVersion = getPrefObject(@"java.lwjgl_version");
+    if (lwjglVersion && lwjglVersion.length > 0 && ![lwjglVersion isEqualToString:@"auto"]) {
+        setenv("POJAV_LWJGL_VERSION", lwjglVersion.UTF8String, 1);
+        NSLog(@"[JavaLauncher] Applied LWJGL version override: %@", lwjglVersion);
+    }
 }
 
 void init_loadCustomJvmFlags(int* argc, const char** argv) {
