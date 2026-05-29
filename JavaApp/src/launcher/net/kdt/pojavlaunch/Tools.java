@@ -173,46 +173,69 @@ public final class Tools {
         return libInfos[0].replaceAll("\\.", "/") + "/" + libInfos[1] + "/" + libInfos[2] + "/" + libInfos[1] + "-" + libInfos[2] + ".jar";
     }
 
-/*
-    private static String getLWJGL3ClassPath() {
-        StringBuilder libStr = new StringBuilder();
-        File lwjgl3Folder = new File(Tools.DIR_GAME_NEW, "lwjgl3");
-        if (/* info.arguments != null && @lwjgl3Folder.exists()) {
-            for (File file: lwjgl3Folder.listFiles()) {
-                if (file.getName().endsWith(".jar")) {
-                    libStr.append(file.getAbsolutePath() + ":");
-                }
+    private static String getLWJGLVersionOverride() {
+        String version = System.getenv("POJAV_LWJGL_VERSION");
+        if (version == null || version.isEmpty()) {
+            try {
+                version = MCOptionUtils.get("lwjglVersion");
+            } catch (Throwable ignored) {
+                version = null;
             }
-            // Remove the ':' at the end
-            libStr.setLength(libStr.length() - 1);
         }
-        return libStr.toString();
+        if (version != null) {
+            version = version.trim();
+            if (version.isEmpty()) {
+                version = null;
+            }
+        }
+        return version;
     }
-*/
+
+    private static String[] getLWJGL3ClassPathOverride() {
+        String version = getLWJGLVersionOverride();
+        if (version == null || version.isEmpty()) {
+            return new String[0];
+        }
+        if (Tools.DIR_GAME_NEW == null || Tools.DIR_GAME_NEW.isEmpty()) {
+            System.out.println("LWJGL override requested but POJAV_GAME_DIR is not set.");
+            return new String[0];
+        }
+
+        File lwjgl3Root = new File(Tools.DIR_GAME_NEW, "lwjgl3");
+        File versionFolder = new File(lwjgl3Root, version);
+        if (!versionFolder.exists() || !versionFolder.isDirectory()) {
+            System.out.println("LWJGL override requested but version folder not found: " + versionFolder.getAbsolutePath());
+            return new String[0];
+        }
+
+        List<String> jarPaths = new ArrayList<String>();
+        for (File file : versionFolder.listFiles()) {
+            if (file.isFile() && file.getName().endsWith(".jar")) {
+                jarPaths.add(file.getAbsolutePath());
+            }
+        }
+        if (jarPaths.isEmpty()) {
+            System.out.println("LWJGL override requested but no jar files found in: " + versionFolder.getAbsolutePath());
+        }
+        return jarPaths.toArray(new String[0]);
+    }
+
     public static String generateLaunchClassPath(JMinecraftVersionList.Version info) {
         StringBuilder libStr = new StringBuilder(); //versnDir + "/" + version + "/" + version + ".jar:";
 
         String[] classpath = generateLibClasspath(info);
 
-        // Debug: LWJGL 3 override
-        // File lwjgl2Folder = new File(Tools.MAIN_PATH, "lwjgl2");
-
-        /*
-         File lwjgl3Folder = new File(Tools.MAIN_PATH, "lwjgl3");
-         if (lwjgl3Folder.exists()) {
-         for (File file: lwjgl3Folder.listFiles()) {
-         if (file.getName().endsWith(".jar")) {
-         libStr.append(file.getAbsolutePath() + ":");
-         }
-         }
-         } else if (lwjgl2Folder.exists()) {
-         for (File file: lwjgl2Folder.listFiles()) {
-         if (file.getName().endsWith(".jar")) {
-         libStr.append(file.getAbsolutePath() + ":");
-         }
-         }
-         }
-         */
+        String[] lwjglOverride = getLWJGL3ClassPathOverride();
+        if (lwjglOverride.length > 0) {
+            System.out.println("Using LWJGL version override: " + getLWJGLVersionOverride());
+            for (String perJar : lwjglOverride) {
+                if (!new File(perJar).exists()) {
+                    System.out.println("Ignored non-existent LWJGL override file: " + perJar);
+                    continue;
+                }
+                libStr.append(perJar + ":");
+            }
+        }
 
         for (String perJar : classpath) {
             if (!new File(perJar).exists()) {
