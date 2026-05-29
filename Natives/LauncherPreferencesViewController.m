@@ -347,6 +347,15 @@
                 @"type": self.typeTextField,
                 @"enableCondition": whenNotInGame
             },
+            @{@"key": @"lwjgl_version",
+                @"title": @"LWJGL version",
+                @"hasDetail": @YES,
+                @"icon": @"network",
+                @"type": self.typePickField,
+                @"pickKeys": @[@"auto", @"3.3.1", @"3.3.3", @"3.4.1"],
+                @"pickList": @[@"Auto", @"3.3.1", @"3.3.3", @"3.4.1"],
+                @"enableCondition": whenNotInGame
+            },
             @{@"key": @"auto_ram",
                 @"hasDetail": @YES,
                 @"icon": @"slider.horizontal.3",
